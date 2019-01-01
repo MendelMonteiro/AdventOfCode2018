@@ -1,6 +1,7 @@
 ﻿
 open System
 open System.IO
+open System.Threading
 
 let puzzle1Part1 =
     File.ReadAllLines(__SOURCE_DIRECTORY__ + "\input1.txt") 
@@ -46,7 +47,30 @@ let puzzle2Part1 =
 
     printfn "%A" result
 
+let puzzel2Part2 = 
+    let input = File.ReadAllLines(__SOURCE_DIRECTORY__ + "\input2.txt") |> Array.ofSeq
+    let stringLength = input.[0].Length
+    let areSimilar (x:string) (y:string) = 
+        let matchingChars = x |> Seq.zip y
+                              |> Seq.filter (fun (a, b) -> a = b)
+                              |> Seq.map fst
+
+        match matchingChars |> Seq.length with 
+        | x when x = stringLength - 1 -> Some (Array.ofSeq matchingChars)
+        | _ -> None
+
+    let findSimilar = 
+        input
+        |> Array.map (fun x -> input |> Array.map (areSimilar x) |> Array.choose id |> Array.concat)
+        |> Array.filter (fun x -> Array.length x > 0)
+        |> Array.take 1
+        |> Array.concat
+
+    let result = new String(findSimilar)
+    printfn "%A" result
+
 [<EntryPoint>]
 let main argv =
     printfn "Hello World from F#!"
     0
+    
