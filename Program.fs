@@ -70,47 +70,47 @@ let puzzel2Part2 =
     let result = new String(findSimilar)
     printfn "%A" result
 
+type Claim = { Id: int; TopLeft: (int * int); BottomRight: (int * int); Size: int }
+let parseClaim s = 
+    let result = Regex.Match(s, "\#(\d+) @ (\d+),(\d+)\: (\d+)x(\d+)")
+    let p = Int32.Parse
+    let id = p result.Groups.[1].Value
+    let (left, top) = (p result.Groups.[2].Value, p result.Groups.[3].Value)
+    let (width, height) = (p result.Groups.[4].Value, p result.Groups.[5].Value)
+    {Id=id; TopLeft=(left, top); BottomRight=(left + width - 1, top + height - 1); Size=width*height}
+
+let claims = Array.map parseClaim 
+let usedPointInClaim claim =
+    let (left, top) = claim.TopLeft
+    let (right, bottom) = claim.BottomRight
+    seq { for col in left..right do for row in top..bottom do yield ((col, row), claim) } |> List.ofSeq
+    
+let usedPoints = Array.map usedPointInClaim >> List.concat
+let hasCount f = Seq.length >> f
+
 let puzzle3Part1 =
-    (*
-    One or more corners is inside another rectangle
-    Points impacted calculated as: 
-      - compeletely inside = size of rect
-      - top right = my right x - max(other left x, my left x), my top y - max(other bottom y, my bottom y)
-      - bottom right = my right x - max(other left x, my left x), min(other top y, my top y) - my bottom y 
-      - bottom left = my left x - min(other right x, my right x), min(other top y, my top y) - my bottom y 
-      - top left = my left x - max(other right x, my right x), my top y - max(other bottom y, my bottom y)
-    Do for all rectangles, aggregating points into a set
-
-    let rectPoints (x, y) = [x; y] 
-    let allPoints = Array.map rectPoints >> List.concat 
-    let maxPoints (maxX, maxY) (x, y) = (max maxX x, max maxY y)
-    let bounds = List.fold maxPoints (0, 0)
-    input |> rectangles |> allPoints |> bounds
-
-    *)
     let inputFile = File.ReadAllLines(__SOURCE_DIRECTORY__ + "\input3.txt") |> Array.ofSeq
     let test = [|"#1 @ 1,3: 4x4"; "#2 @ 3,1: 4x4"; "#3 @ 5,5: 2x2"|]
     let input = inputFile
-    let parseRectangle s = 
-        let result = Regex.Match(s, "\#\d+ @ (\d+),(\d+)\: (\d+)x(\d+)")
-        let p = Int32.Parse
-        let (left, top) = (p result.Groups.[1].Value, p result.Groups.[2].Value)
-        let (width, height) = (p result.Groups.[3].Value, p result.Groups.[4].Value)
-        ((left, top), (left + width - 1, top + height - 1))
+    let moreThanOne x = x > 1
+    let contested = List.groupBy fst >> List.filter (snd >> hasCount moreThanOne)
+    input |> claims |> usedPoints |> contested |> Seq.length
 
-    let rectangles = Array.map parseRectangle 
-    let usedPointInRect ((x1, y1), (x2, y2)) = 
-        let columns = [x1..x2]
-        let rows = [y1..y2]
-        List.allPairs columns rows
-        
-    let usedPoints = Seq.map usedPointInRect >> Seq.concat
-    let moreThanOne (_, xs) = (xs |> Seq.length) > 1
-    let duplicates = Seq.groupBy id >> Seq.filter moreThanOne
-    input |> rectangles |> usedPoints |> duplicates |> Seq.length
+let puzzle3Part2 = 
+    let inputFile = File.ReadAllLines(__SOURCE_DIRECTORY__ + "\input3.txt") |> Array.ofSeq
+    let test = [|"#1 @ 1,3: 4x4"; "#2 @ 3,1: 4x4"; "#3 @ 5,5: 2x2"; |]
+    let input = inputFile
+    let onlyOne x = x = 1
+    let sameAsClaim (c:Claim) (x:int) = x = c.Size
+    let filterClaim (c, xs) = xs |> List.length |> sameAsClaim c
+    let uncontested = List.groupBy fst >> List.filter (snd >> hasCount onlyOne) >> List.map snd >> List.concat >> List.groupBy snd >> List.filter filterClaim
+    let lines = input |> claims |> usedPoints 
+                      |> uncontested |> List.map fst |> List.map (fun x -> x.Id)
+    lines
 
 [<EntryPoint>]
 let main argv =
-    printfn "Hello World from F#!"
+    let x = puzzle3Part2
+    printf "%A" x
     0
     
