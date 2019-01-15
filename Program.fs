@@ -1,4 +1,5 @@
-﻿
+﻿module Puzzle1
+
 open System
 open System.Text.RegularExpressions
 open System.IO
@@ -70,20 +71,25 @@ let puzzel2Part2 =
     let result = new String(findSimilar)
     printfn "%A" result
 
-type Claim = { Id: int; TopLeft: (int * int); BottomRight: (int * int); Size: int }
+[<Measure>] type hor 
+[<Measure>] type ver 
+[<Measure>] type area = hor * ver
+type Claim = { Id: int; TopLeft: (int<hor> * int<ver>); BottomRight: (int<hor> * int<ver>); Size: int<area> }
 let parseClaim s = 
     let result = Regex.Match(s, "\#(\d+) @ (\d+),(\d+)\: (\d+)x(\d+)")
     let p = Int32.Parse
+    let pHor = Int32.Parse >> LanguagePrimitives.Int32WithMeasure
+    let pVer = Int32.Parse >> LanguagePrimitives.Int32WithMeasure
     let id = p result.Groups.[1].Value
-    let (left, top) = (p result.Groups.[2].Value, p result.Groups.[3].Value)
-    let (width, height) = (p result.Groups.[4].Value, p result.Groups.[5].Value)
-    {Id=id; TopLeft=(left, top); BottomRight=(left + width - 1, top + height - 1); Size=width*height}
+    let (left, top) = (pHor result.Groups.[2].Value, pVer result.Groups.[3].Value)
+    let (width, height) = (pHor result.Groups.[4].Value, pVer result.Groups.[5].Value)
+    {Id=id; TopLeft=(left, top); BottomRight=(left + width - 1<hor>, top + height - 1<ver>); Size=width*height}
 
 let claims = Array.map parseClaim 
 let usedPointInClaim claim =
     let (left, top) = claim.TopLeft
     let (right, bottom) = claim.BottomRight
-    seq { for col in left..right do for row in top..bottom do yield ((col, row), claim) } |> List.ofSeq
+    seq { for col in left..1<hor>..right do for row in top..1<ver>..bottom do yield ((col, row), claim) } |> List.ofSeq
     
 let usedPoints = Array.map usedPointInClaim >> List.concat
 let hasCount f = Seq.length >> f
@@ -101,16 +107,10 @@ let puzzle3Part2 =
     let test = [|"#1 @ 1,3: 4x4"; "#2 @ 3,1: 4x4"; "#3 @ 5,5: 2x2"; |]
     let input = inputFile
     let onlyOne x = x = 1
-    let sameAsClaim (c:Claim) (x:int) = x = c.Size
+    let sameAsClaim (c:Claim) (x:int) = x = int c.Size
     let filterClaim (c, xs) = xs |> List.length |> sameAsClaim c
     let uncontested = List.groupBy fst >> List.filter (snd >> hasCount onlyOne) >> List.map snd >> List.concat >> List.groupBy snd >> List.filter filterClaim
     let lines = input |> claims |> usedPoints 
                       |> uncontested |> List.map fst |> List.map (fun x -> x.Id)
     lines
 
-[<EntryPoint>]
-let main argv =
-    let x = puzzle3Part2
-    printf "%A" x
-    0
-    
