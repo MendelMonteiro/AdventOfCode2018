@@ -99,8 +99,3 @@ let puzzle4Part2 =
     |> List.head
     |> (fun (id, ((minute, _), _)) -> minute * id) 
 
-[<EntryPoint>]
-let main argv =
-    let x = puzzle4Part2 
-    0
-    
