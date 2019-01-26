@@ -2,12 +2,7 @@
 
 open System
 open System.IO
-
-let explode (s:string) = [for c in s -> c]
-let implode (xs:char list) =
-        let sb = System.Text.StringBuilder(xs.Length)
-        xs |> List.iter (sb.Append >> ignore)
-        sb.ToString()
+open Shared
 
 let inputFile = File.ReadAllText(__SOURCE_DIRECTORY__ + "\input5.txt") 
 let test = "dabAcCaCBAcCcaDA"
@@ -20,23 +15,25 @@ let toPolymer c = { Value = Char.ToLowerInvariant c; Polarity = if Char.IsLower 
 let combinePolymers polymers unit = 
     let canCombine x y = (x.Value = y.Value) && (x.Polarity <> y.Polarity)
     match polymers with
-    | head::tail -> if canCombine unit head then tail else unit::polymers
+    | head::tail when canCombine unit head -> tail 
+    | xs -> unit::xs
     | [] -> [unit]
 
-let collapseList = List.fold combinePolymers [] >> List.length 
+let collapsePolymers = List.fold combinePolymers [] >> List.length 
 
 let puzzle5Part1 =
-    let collapse = explode >> List.map toPolymer >> collapseList
+    let collapse = explode >> List.map toPolymer >> collapsePolymers
     input |> collapse
 
 let puzzle5Part2 =
     let collapseRemoving list = 
-        let chars = list |> explode |> List.map toPolymer
-        let isUpperOrLower c x = c.Value = x.Value
-        let removeChar c = List.filter (isUpperOrLower c >> not) 
+        let polymers = list |> explode |> List.map toPolymer
+        let areTheSameType c x = c.Value = x.Value
+        let removePolymer c = List.filter (areTheSameType c >> not) 
+        let removePolymers = Seq.map (fun c -> removePolymer c polymers)
         seq { for x in 'a'..'z' do yield toPolymer x } 
-        |> Seq.map (fun c -> removeChar c chars)
-        |> Seq.map collapseList
+        |> removePolymers
+        |> Seq.map collapsePolymers
         |> Seq.min
     input |> collapseRemoving
 
