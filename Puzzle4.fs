@@ -6,7 +6,6 @@ open System.IO
 open System.Threading
 open System.Diagnostics 
 
-type EntryType = Start | Sleep | WakeUp
 [<Measure>] type minute
 [<Measure>] type day
 [<Measure>] type id
