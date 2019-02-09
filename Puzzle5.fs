@@ -32,9 +32,9 @@ let puzzle5Part2 =
         let removePolymer c = List.filter (areTheSameType c >> not) 
         let removePolymers = Seq.map (fun c -> removePolymer c polymers)
         seq { for x in 'a'..'z' do yield toPolymer x } 
-        |> removePolymers
-        |> Seq.map collapsePolymers
-        |> Seq.min
+            |> removePolymers
+            |> Seq.map collapsePolymers
+            |> Seq.min
     input |> collapseRemoving
 
 [<EntryPoint>]
