@@ -37,8 +37,3 @@ let puzzle5Part2 =
             |> Seq.min
     input |> collapseRemoving
 
-[<EntryPoint>]
-let main argv =
-    let x = puzzle5Part1 
-    printfn "%A" x
-    0

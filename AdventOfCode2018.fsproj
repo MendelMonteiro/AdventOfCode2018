@@ -7,9 +7,12 @@
 
   <ItemGroup>
     <Compile Include="Shared.fs" />
-    <Compile Include="Program.fs" />
+    <Compile Include="Puzzle1.fs" />
+    <Compile Include="Puzzle2.fs" />
+    <Compile Include="Puzzle3.fs" />
     <Compile Include="Puzzle4.fs" />
     <Compile Include="Puzzle5.fs" />
+    <Compile Include="Puzzle6.fs" />
   </ItemGroup>
 
 </Project>

@@ -3,8 +3,6 @@
 open System
 open System.Text.RegularExpressions
 open System.IO
-open System.Threading
-open System.Diagnostics 
 
 [<Measure>] type minute
 [<Measure>] type day
