@@ -3,6 +3,7 @@
 open System
 open System.Text.RegularExpressions
 open System.IO
+open Shared
 
 [<Measure>] type minute
 [<Measure>] type day
@@ -65,13 +66,13 @@ let toSleepEntries entries =
         | _ -> times
     entries |> List.pairwise |> List.fold makeSleepTime []
 
+
 let sleepTotals =
     let guardId x = x.GuardId
     let minutes x = seq { for minute in x.SleepMinute..1<minute>..(x.WakeMinute-1<minute>) do yield minute } 
-    let addOrUpdate initial update map key = match map |> Map.tryFind key with | Some x -> update x | None -> initial
     let maxBy (mk, mv) k v = if mv > v then (mk, mv) else (k, v)
     let sumAndMax = Map.fold (fun (m, s) k v ->  (maxBy m k v, s + v)) ((0<minute>, 0), 0)
-    let sumMinutes counts key = counts |> Map.add key (addOrUpdate 1 ((+) 1) counts key)
+    let sumMinutes counts key = counts |> addOrUpdate 1 ((+) 1) key
     let countsByMinute = List.map minutes >> Seq.concat >> Seq.fold sumMinutes Map.empty >> sumAndMax
     let applyToSecond apply (x, y) = (x, apply y)
     List.filter (List.isEmpty >> not)
