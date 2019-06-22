@@ -38,7 +38,7 @@ let puzzle6Part1 =
     // 4. Exclude all coordinates where a distance touches an edge (as they are infinite)
     // 5. Take the remaining coordinate which has the most distances 
     let minWithCount (d1:int<distance>, _:int) (d2:int<distance>, count:int) = match d2 - d1 with | x when x = 0<distance> -> (d1, count+1) | x when x < 0<distance> -> (d2, count) | _ -> (d1, 1)
-    let keepSmallestDistances smallest c = c.Distances |> List.fold (fun map (point, distance) -> addOrUpdate (distance, 1) (minWithCount (distance, 1)) point map) smallest 
+    let keepSmallestDistances smallest c = (smallest, c.Distances) ||> List.fold (fun map (point, distance) -> addOrUpdate (distance, 1) (minWithCount (distance, 1)) point map)  
     let coordsWithDistances = coordinates |> Array.map (fun x -> { x with Distances = allPoints bounds |> Seq.map (distanceToPoint x) |> List.ofSeq } ) 
     let smallestDistances = coordsWithDistances |> Seq.fold keepSmallestDistances Map.empty 
     let isSmallestAndNotTied smallest (p, d) = 
