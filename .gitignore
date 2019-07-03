@@ -261,4 +261,5 @@ __pycache__/
 *.pyc
 
 *.txt
-.vscode/*
+.vscode/
+.ionide/
