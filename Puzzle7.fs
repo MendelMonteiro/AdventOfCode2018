@@ -72,54 +72,48 @@ type StepProcessing = {StepId: NodeIdentifier; Worker: Worker; CompletionTime: T
 let puzzle7Part2 =
     let timeToProcess (n:NodeIdentifier) = 60 + (int n) - (int 'A') + 1
     let getId n = n.Id
+    let completionTime x = x.CompletionTime
 
-    // Traverse passing the workers that are active/available
-    // How do we store which worker is working on a particular step?
-    // - Maybe we can have a list of steps in progress with an expiration time (and an incrementing time argument)
-    //     This could be a record which contains the step, the worker and when it will be done
-    // A valid task is one that has all parents processed
-    // 'pending' = next valid steps, i.e. those that can be processed by an worker
-
-    let rec traverseGraph allSteps pendingSteps completedSteps idleWorkers stepsInProgress tick = 
+    let rec traverseGraph allSteps pendingSteps completedSteps idleWorkers stepsInProgress currentTick = 
         let findStep id = Map.find id allSteps
-        let finishProcessing currentStep pending newCompletedSteps = 
+        let getNewPending currentStep pending newCompletedSteps = 
             let isProcessed id = List.contains id newCompletedSteps
             let allParentsAreProcessed n = n.Parents |> List.isEmpty || n.Parents |> List.forall isProcessed
             let newPending = currentStep.Nodes |> List.map findStep |> List.where allParentsAreProcessed |> List.map getId
-            let allPendingSteps = List.concat [pending; newPending] |> List.sort
-            allPendingSteps
+            List.concat [pending; newPending] |> List.sort
 
-        let nextTick steps = (List.minBy (fun x -> x.CompletionTime) steps).CompletionTime
+        let nextStepToComplete = List.minBy completionTime 
+        let nextTick = nextStepToComplete >> completionTime
         let startProcessing step worker stepsInProgress tick =
             let processing = {StepId = step; Worker = worker; CompletionTime = tick + timeToProcess step}
             let stepsInProgress' = processing :: stepsInProgress
             (stepsInProgress', nextTick stepsInProgress') 
 
         let processCompleted pendingSteps completedSteps idleWorkers stepsInProgress = 
+            let getNextTick ps workers nt = match ps, workers with | _::_, _::_ -> currentTick | _ -> nt
             match pendingSteps, completedSteps, idleWorkers, stepsInProgress with
-            | [], c, _, [] -> // No pending and no in progress -> all done
-                tick 
+            | [], _, _, [] -> // No pending and no in progress -> all done
+                currentTick 
             | p::ps, _, worker :: workers, _ -> // Some pending and some idle works -> start processing next pending
-                let newStepsInProgress, nt = startProcessing p worker stepsInProgress tick
-                let nextTick' = match ps, workers with | _::_, _::_ -> tick | _ -> nt
+                let newStepsInProgress, nt = startProcessing p worker stepsInProgress currentTick
+                let nextTick' = getNextTick ps workers nt
                 traverseGraph allSteps ps completedSteps workers newStepsInProgress nextTick' 
             | ps, _, workers, inProgress ->  // No idle workers or no pending -> finish processing
-                let finishedStep = inProgress |> List.minBy (fun x -> x.CompletionTime)
+                let finishedStep = inProgress |> nextStepToComplete
                 let idleWorkers' = finishedStep.Worker :: workers
                 let completedSteps' = finishedStep.StepId :: completedSteps
                 let inProgress' = inProgress |> List.except [finishedStep]
                 let step = findStep finishedStep.StepId
-                let pending' = finishProcessing step ps completedSteps' 
-                let nt = match inProgress' with | [] -> tick | n -> nextTick n
-                let nextTick' = match pending', idleWorkers' with | _::_, _::_ -> tick | _ -> nt
+                let pending' = getNewPending step ps completedSteps' 
+                let tick = match inProgress' with | [] -> currentTick | n -> nextTick n
+                let nextTick' = getNextTick pending' idleWorkers' tick
                 traverseGraph allSteps pending' completedSteps' idleWorkers' inProgress' nextTick'
 
         processCompleted pendingSteps completedSteps idleWorkers stepsInProgress 
 
     let traverseGraphMultipleRoots allSteps rootSteps = 
-        let sortedRoots = rootSteps |> Seq.sort |> List.ofSeq |> List.map getId
-        printfn "sortedRoots %A" sortedRoots
-        traverseGraph allSteps sortedRoots [] ["me"; "elf #1"; "elf #2"; "elf #3"; "elf #4"] [] 0
+        let sortRoots = Seq.sort >> List.ofSeq >> List.map getId
+        traverseGraph allSteps (rootSteps |> sortRoots) [] ["me"; "elf #1"; "elf #2"; "elf #3"; "elf #4"] [] 0
             
     let (roots, allNodes) = input |> Array.map buildVertex |> buildGraph 
     let result = traverseGraphMultipleRoots allNodes roots
