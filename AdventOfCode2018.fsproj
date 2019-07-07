@@ -1,10 +1,8 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.1</TargetFramework>
   </PropertyGroup>
-
   <ItemGroup>
     <Compile Include="Shared.fs" />
     <Compile Include="Puzzle1.fs" />
@@ -14,6 +12,6 @@
     <Compile Include="Puzzle5.fs" />
     <Compile Include="Puzzle6.fs" />
     <Compile Include="Puzzle7.fs" />
+    <Compile Include="Puzzle8.fs" />
   </ItemGroup>
-
 </Project>
